@@ -28,7 +28,6 @@ ALL_CCFLAGS += $(NVCCFLAGS)
 ALL_CCFLAGS += --threads 0
 # variable <variable> was set but never used
 ALL_CCFLAGS += -diag-suppress 550
-ALL_CCFLAGS += -DGPU
 
 GENCODE_FLAGS := 
 GENCODE_FLAGS += -gencode arch=compute_50,code=sm_50
@@ -45,16 +44,30 @@ GENCODE_FLAGS += -gencode arch=compute_90,code=compute_90
 
 all: build
 
-build: grayScale
+build: grayScale blurGray blurRgb
 
 grayScale.o: grayScale.cu
-	$(NVCC) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+	$(NVCC) $(ALL_CCFLAGS) -DGPU $(GENCODE_FLAGS) -o $@ -c $<
 
 grayScale: grayScale.o
-	$(NVCC) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ $+
+	$(NVCC) $(ALL_CCFLAGS) -DGPU $(GENCODE_FLAGS) -o $@ $+
+
+blurGray.o: blur.cu
+	$(NVCC) $(ALL_CCFLAGS) -DCHANNEL_NUM=1 $(GENCODE_FLAGS) -o $@ -c $<
+
+blurGray: blurGray.o
+	$(NVCC) $(ALL_CCFLAGS) -DCHANNEL_NUM=1 $(GENCODE_FLAGS) -o $@ $+
+
+blurRgb.o: blur.cu
+	$(NVCC) $(ALL_CCFLAGS) -DCHANNEL_NUM=3 $(GENCODE_FLAGS) -o $@ -c $<
+
+blurRgb: blurRgb.o
+	$(NVCC) $(ALL_CCFLAGS) -DCHANNEL_NUM=3 $(GENCODE_FLAGS) -o $@ $+
 
 run: build
 	./grayScale
+	./blurGray
+	./blurRgb
 
 clean:
-	rm -f *.o grayScale lenna_gray.png
+	rm -f *.o  *.png grayScale blurGray blurRgb
