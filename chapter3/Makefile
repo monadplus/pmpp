@@ -44,7 +44,7 @@ GENCODE_FLAGS += -gencode arch=compute_90,code=compute_90
 
 all: build
 
-build: grayScale blurGray blurRgb
+build: grayScale blurGray blurRgb matrixMul
 
 grayScale.o: grayScale.cu
 	$(NVCC) $(ALL_CCFLAGS) -DGPU $(GENCODE_FLAGS) -o $@ -c $<
@@ -64,10 +64,17 @@ blurRgb.o: blur.cu
 blurRgb: blurRgb.o
 	$(NVCC) $(ALL_CCFLAGS) -DCHANNEL_NUM=3 $(GENCODE_FLAGS) -o $@ $+
 
+matrixMul.o: matrixMul.cu
+	$(NVCC) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
+
+matrixMul: matrixMul.o
+	$(NVCC) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ $+
+
 run: build
 	./grayScale
 	./blurGray
 	./blurRgb
+	./matrixMul
 
 clean:
-	rm -f *.o  *.png grayScale blurGray blurRgb
+	rm -f *.o  *.png grayScale blurGray blurRgb matrixMul
